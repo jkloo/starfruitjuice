@@ -9,6 +9,7 @@ on:
 env:
   TAG_NAME: ${{ vars.STARFRUITJUICE_TAG_NAME }}
   TAG_MESSAGE: ${{ vars.STARFRUITJUICE_TAG_MESSAGE }}
+  CHECK_LIVE_SIGNAL: PAGE IS LIVE
 
 jobs:
   check-page:
@@ -59,7 +60,7 @@ jobs:
           output="$(poetry run check 2>&1)"
           exit_code=$?
           printf '%s\n' "${output}"
-          if printf '%s\n' "${output}" | grep -Fxq "PAGE IS LIVE"; then
+          if printf '%s\n' "${output}" | grep -Fxq "${CHECK_LIVE_SIGNAL}"; then
             echo "is_live=true" >> "$GITHUB_OUTPUT"
           else
             echo "is_live=false" >> "$GITHUB_OUTPUT"
