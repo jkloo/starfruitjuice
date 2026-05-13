@@ -6,13 +6,21 @@ on:
 
   workflow_dispatch:
 
+env:
+  TAG_NAME: ${{ vars.STARFRUITJUICE_TAG_NAME }}
+  TAG_MESSAGE: ${{ vars.STARFRUITJUICE_TAG_MESSAGE }}
+
 jobs:
   check-page:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -25,5 +33,51 @@ jobs:
       - name: Install dependencies
         run: poetry install
 
+      - name: Validate tag environment
+        run: |
+          if [ -z "${TAG_NAME}" ]; then
+            echo "STARFRUITJUICE_TAG_NAME is required"
+            exit 1
+          fi
+
+      - name: Check whether tag already exists
+        id: tag_exists
+        run: |
+          git fetch --tags --force
+          if git rev-parse -q --verify "refs/tags/${TAG_NAME}" >/dev/null; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "Tag ${TAG_NAME} already exists; skipping check."
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Run checker
-        run: poetry run check
+        if: steps.tag_exists.outputs.exists != 'true'
+        id: run_checker
+        run: |
+          set +e
+          poetry run check
+          exit_code=$?
+          echo "exit_code=${exit_code}" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Create and push tag when check exits 1
+        if: steps.tag_exists.outputs.exists != 'true' && steps.run_checker.outputs.exit_code == '1'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch --tags --force
+          if git rev-parse -q --verify "refs/tags/${TAG_NAME}" >/dev/null; then
+            echo "Tag ${TAG_NAME} already exists; nothing to do."
+            exit 0
+          fi
+          if [ -n "${TAG_MESSAGE}" ]; then
+            git tag -a "${TAG_NAME}" -m "${TAG_MESSAGE}"
+          else
+            git tag "${TAG_NAME}"
+          fi
+          git push origin "refs/tags/${TAG_NAME}"
+
+      - name: Fail job when checker exits non-zero
+        if: steps.tag_exists.outputs.exists != 'true' && steps.run_checker.outputs.exit_code != '0'
+        run: exit "${{ steps.run_checker.outputs.exit_code }}"
