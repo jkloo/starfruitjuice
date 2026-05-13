@@ -80,4 +80,12 @@ jobs:
 
       - name: Fail job when checker exits non-zero
         if: steps.tag_exists.outputs.exists != 'true' && steps.run_checker.outcome == 'success' && steps.run_checker.outputs.exit_code != '0'
-        run: exit "${{ steps.run_checker.outputs.exit_code }}"
+        run: |
+          exit_code="${{ steps.run_checker.outputs.exit_code }}"
+          case "${exit_code}" in
+            ''|*[!0-9]*)
+              echo "Invalid exit code: ${exit_code}"
+              exit 1
+              ;;
+          esac
+          exit "${exit_code}"
