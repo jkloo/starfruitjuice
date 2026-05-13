@@ -56,11 +56,9 @@ jobs:
         if: steps.tag_exists.outputs.exists != 'true'
         id: run_checker
         run: |
-          set +e
           stdout_file="$(mktemp)"
           stderr_file="$(mktemp)"
           poetry run check >"${stdout_file}" 2>"${stderr_file}"
-          exit_code=$?
           cat "${stdout_file}"
           cat "${stderr_file}" >&2
           if grep -Fxq "${CHECK_LIVE_SIGNAL}" "${stdout_file}"; then
@@ -69,10 +67,8 @@ jobs:
             echo "is_live=false" >> "$GITHUB_OUTPUT"
           fi
           rm -f "${stdout_file}" "${stderr_file}"
-          echo "exit_code=${exit_code}" >> "$GITHUB_OUTPUT"
-          exit 0
 
-      - name: Create and push tag when check exits 1
+      - name: Create and push tag when live signal is detected
         if: steps.tag_exists.outputs.exists != 'true' && steps.run_checker.outcome == 'success' && steps.run_checker.outputs.is_live == 'true'
         run: |
           git config user.name "github-actions[bot]"
@@ -88,15 +84,3 @@ jobs:
             git tag "${TAG_NAME}"
           fi
           git push origin "refs/tags/${TAG_NAME}"
-
-      - name: Fail job when checker exits non-zero
-        if: steps.tag_exists.outputs.exists != 'true' && steps.run_checker.outcome == 'success' && steps.run_checker.outputs.exit_code != '0'
-        run: |
-          exit_code="${{ steps.run_checker.outputs.exit_code }}"
-          case "${exit_code}" in
-            ''|*[!0-9]*)
-              echo "Invalid exit code: ${exit_code}"
-              exit 1
-              ;;
-          esac
-          exit "${exit_code}"

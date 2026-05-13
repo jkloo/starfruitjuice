@@ -1,5 +1,4 @@
 import os
-import sys
 
 import requests
 from bs4 import BeautifulSoup
@@ -40,24 +39,21 @@ def page_is_live(html: str) -> bool:
     return NOT_FOUND_TEXT.lower() not in text.lower()
 
 
-def main():
+def main() -> int:
     print(f"Checking: {TARGET_URL}")
 
     html = fetch_page(TARGET_URL)
 
     if html is None:
-        sys.exit(0)
+        return 0
 
     if page_is_live(html):
         print("PAGE IS LIVE")
-
-        # Non-zero exit code can trigger
-        # GitHub Actions notifications
-        sys.exit(1)
+        return 0
 
     print("Page still unavailable")
-    sys.exit(0)
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())
