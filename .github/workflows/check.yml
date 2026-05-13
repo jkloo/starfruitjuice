@@ -62,7 +62,7 @@ jobs:
           exit 0
 
       - name: Create and push tag when check exits 1
-        if: steps.tag_exists.outputs.exists != 'true' && steps.run_checker.outputs.exit_code == '1'
+        if: steps.tag_exists.outputs.exists != 'true' && steps.run_checker.outcome == 'success' && steps.run_checker.outputs.exit_code == '1'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -79,5 +79,5 @@ jobs:
           git push origin "refs/tags/${TAG_NAME}"
 
       - name: Fail job when checker exits non-zero
-        if: steps.tag_exists.outputs.exists != 'true' && steps.run_checker.outputs.exit_code != '0'
+        if: steps.tag_exists.outputs.exists != 'true' && steps.run_checker.outcome == 'success' && steps.run_checker.outputs.exit_code != '0'
         run: exit "${{ steps.run_checker.outputs.exit_code }}"
