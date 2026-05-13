@@ -56,13 +56,19 @@ jobs:
         id: run_checker
         run: |
           set +e
-          poetry run check
+          output="$(poetry run check 2>&1)"
           exit_code=$?
+          printf '%s\n' "${output}"
+          if printf '%s\n' "${output}" | grep -Fxq "PAGE IS LIVE"; then
+            echo "is_live=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "is_live=false" >> "$GITHUB_OUTPUT"
+          fi
           echo "exit_code=${exit_code}" >> "$GITHUB_OUTPUT"
           exit 0
 
       - name: Create and push tag when check exits 1
-        if: steps.tag_exists.outputs.exists != 'true' && steps.run_checker.outcome == 'success' && steps.run_checker.outputs.exit_code == '1'
+        if: steps.tag_exists.outputs.exists != 'true' && steps.run_checker.outcome == 'success' && steps.run_checker.outputs.is_live == 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
