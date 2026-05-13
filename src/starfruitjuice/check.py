@@ -45,14 +45,14 @@ def main() -> int:
     html = fetch_page(TARGET_URL)
 
     if html is None:
-        return 0
+        return 1
 
     if page_is_live(html):
         print("PAGE IS LIVE")
         return 0
 
     print("Page still unavailable")
-    return 0
+    return 1
 
 
 if __name__ == "__main__":
