@@ -7,8 +7,8 @@ on:
   workflow_dispatch:
 
 env:
-  TAG_NAME: ${{ vars.STARFRUITJUICE_TAG_NAME }}
-  TAG_MESSAGE: ${{ vars.STARFRUITJUICE_TAG_MESSAGE }}
+  TAG_NAME: ${{ vars.TARGET_SLUG }}
+  TAG_MESSAGE: ${{ vars.TAG_MESSAGE }}
 
 jobs:
   check-page:
@@ -36,7 +36,7 @@ jobs:
       - name: Validate tag environment
         run: |
           if [ -z "${TAG_NAME}" ]; then
-            echo "STARFRUITJUICE_TAG_NAME is required"
+            echo "TAG_NAME is required"
             exit 1
           fi
 

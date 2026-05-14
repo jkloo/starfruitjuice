@@ -8,7 +8,9 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-TARGET_URL = os.environ["TARGET_URL"]
+BASE_URL = os.environ["BASE_URL"]
+TARGET_SLUG = os.environ["TARGET_SLUG"]
+TARGET_URL = f"{BASE_URL.rstrip("/")}/{TARGET_SLUG}/"
 
 NOT_FOUND_TEXT = os.getenv(
     "NOT_FOUND_TEXT",
