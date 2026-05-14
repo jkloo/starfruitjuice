@@ -9,6 +9,8 @@ on:
 env:
   TAG_NAME: ${{ vars.TARGET_SLUG }}
   TAG_MESSAGE: ${{ vars.TAG_MESSAGE }}
+  BASE_URL: ${{ vars.BASE_URL }}
+  TARGET_SLUG: ${{ vars.TARGET_SLUG }}
 
 jobs:
   check-page:
